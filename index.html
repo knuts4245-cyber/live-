@@ -2,851 +2,209 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LuckyBid – TikTok Auction Board</title>
+<title>LuckyBid — Live Overlay</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0d14;
-    --panel: #111520;
-    --card: #161c2d;
-    --border: #1e2840;
-    --accent: #00e5ff;
-    --yellow: #ffd600;
-    --green: #00e676;
-    --red: #ff1744;
-    --purple: #7c4dff;
-    --text: #e8eaf6;
-    --muted: #546e7a;
-    --tiktok: #fe2c55;
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:transparent;font-family:'Rajdhani',sans-serif;color:#dde3f0;width:100%;height:100%;overflow:hidden}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+.board{width:440px;margin:0 auto;display:flex;flex-direction:column;gap:10px;padding:20px}
 
-  body {
-    font-family: 'Rajdhani', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    gap: 0;
-  }
+.badge{border-radius:10px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;letter-spacing:2px;backdrop-filter:blur(8px)}
+.badge-nomin{background:#0d111799;border:2px solid #ffd600;color:#ffd600;justify-content:center;gap:10px}
+.badge-snipe{background:#0d111799;border:2px solid #1d2235;color:#dde3f0}
+.badge-snipe .val{background:#fe2c55;color:#fff;border-radius:6px;padding:3px 12px;font-size:14px}
+.badge-vouch{background:rgba(124,77,255,.12);border:2px solid #7c4dff;color:#7c4dff}
+.badge-vouch .val{background:#7c4dff;color:#fff;border-radius:6px;padding:3px 12px;font-size:14px}
 
-  /* ── SIDEBAR ── */
-  #sidebar {
-    width: 320px;
-    min-width: 320px;
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    padding: 20px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow-y: auto;
-  }
+.clock-card{background:#0d1117ee;border:1px solid #1d2235;border-radius:16px;overflow:hidden;backdrop-filter:blur(12px)}
+.clock-top{background:rgba(0,0,0,.5);padding:12px 20px;text-align:center;border-bottom:1px solid #1d2235}
+.brand{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:3px;color:#4a5568}
+.brand-title{font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:6px;color:#dde3f0;margin-top:2px}
 
-  .section-label {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
-    letter-spacing: 3px;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
+#main-timer{font-family:'Orbitron',sans-serif;font-size:86px;font-weight:900;text-align:center;padding:28px 0 18px;color:#fff;text-shadow:0 0 50px rgba(0,229,255,.35);line-height:1;transition:color .3s}
+#main-timer.warning{color:#ffd600;text-shadow:0 0 40px rgba(255,214,0,.5)}
+#main-timer.danger{color:#ff1744;text-shadow:0 0 50px rgba(255,23,68,.7);animation:blink .5s infinite}
+@keyframes blink{50%{opacity:.25}}
 
-  /* Live Status */
-  .status-box {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-  }
-  .status-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  #status-text {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--green);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  #status-text::before {
-    content: '';
-    width: 8px; height: 8px;
-    background: var(--green);
-    border-radius: 50%;
-    animation: pulse 1.2s infinite;
-  }
-  @keyframes pulse {
-    0%,100%{opacity:1;transform:scale(1)}
-    50%{opacity:.4;transform:scale(1.4)}
-  }
-  #sidebar-timer {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--accent);
-  }
-  #sidebar-timer.warning { color: var(--yellow); }
-  #sidebar-timer.danger  { color: var(--red); animation: blink .5s infinite; }
-  @keyframes blink { 50%{opacity:.3} }
+#snipe-flash{display:none;background:linear-gradient(90deg,rgba(254,44,85,.15),rgba(254,44,85,.05));border:1px solid #fe2c55;border-radius:8px;margin:0 16px;padding:9px;text-align:center;font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:3px;color:#fe2c55;animation:pb 1s infinite}
+@keyframes pb{50%{border-color:transparent}}
 
-  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+#waiting-area{min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+#waiting-text{font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:4px;color:#4a5568;text-align:center;animation:breathe 2s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.4}50%{opacity:1}}
 
-  .btn {
-    flex: 1;
-    padding: 10px 0;
-    border: none;
-    border-radius: 8px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: filter .15s, transform .1s;
-  }
-  .btn:hover { filter: brightness(1.2); }
-  .btn:active { transform: scale(.96); }
-  .btn-start { background: var(--accent); color: #000; }
-  .btn-pause { background: var(--card); color: var(--text); border: 1px solid var(--border); }
-  .btn-restart { background: rgba(255,23,68,.15); color: var(--red); border: 1px solid rgba(255,23,68,.3); }
-  .btn-sm {
-    flex: 1;
-    padding: 8px 0;
-    border: none;
-    border-radius: 6px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: filter .15s;
-  }
-  .btn-sm:hover { filter: brightness(1.2); }
-  .btn-dec { background: rgba(255,23,68,.15); color: var(--red); border: 1px solid rgba(255,23,68,.3); }
-  .btn-inc { background: rgba(0,230,118,.15); color: var(--green); border: 1px solid rgba(0,230,118,.3); }
+#winner-display{display:none;flex-direction:column;align-items:center;gap:8px;animation:winIn .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes winIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.win-crown{font-size:40px;animation:bounce 1s ease infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+.win-label{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:4px;color:#ffd600}
+.win-name{font-family:'Orbitron',sans-serif;font-size:30px;font-weight:900;color:#fff;text-shadow:0 0 20px rgba(255,214,0,.4)}
+.win-coins{color:#ffd600;font-size:15px;font-weight:700}
 
-  /* Timer Controls */
-  .timer-inputs { display: flex; gap: 8px; margin-bottom: 10px; }
-  .timer-field {
-    flex: 1;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-  }
-  .timer-field label { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 4px; }
-  .timer-field input {
-    width: 100%;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-family: 'Orbitron', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    text-align: center;
-    outline: none;
-  }
-  input[type=number]::-webkit-inner-spin-button { display: none; }
+#bid-feed{max-height:140px;overflow:hidden;padding:0 16px 14px;display:flex;flex-direction:column;gap:5px}
+.bid-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border-radius:6px;padding:7px 10px;font-size:13px;animation:bidIn .35s ease}
+.bid-item.newest{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18)}
+@keyframes bidIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.b-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.b-src{font-size:9px;padding:2px 5px;border-radius:3px;opacity:.8}
+.src-tiktok{background:rgba(254,44,85,.15);color:#fe2c55}
+.src-manual{background:rgba(0,229,255,.1);color:#00e5ff}
+.b-coins{color:#ffd600;font-weight:700;font-size:12px;margin-left:auto}
 
-  .adj-row { display: flex; gap: 8px; margin-bottom: 6px; }
+.clock-footer{padding:9px 20px;border-top:1px solid #1d2235;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#4a5568}
+#footer-live{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;color:#00e5ff;display:flex;align-items:center;gap:5px}
+#footer-live::before{content:'';width:6px;height:6px;border-radius:50%;background:#00e676;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.5)}}
 
-  /* Game Settings */
-  .setting-row {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .setting-info { flex: 1; }
-  .setting-info .name { font-size: 13px; font-weight: 700; letter-spacing: .5px; }
-  .setting-info .sub  { font-size: 10px; color: var(--muted); margin-top: 1px; }
-  .setting-val {
-    background: var(--border);
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--accent);
-    min-width: 44px;
-    text-align: center;
-  }
-  .eye-btn {
-    background: rgba(0,229,255,.1);
-    border: 1px solid rgba(0,229,255,.2);
-    color: var(--accent);
-    border-radius: 6px;
-    width: 32px; height: 32px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    font-size: 14px;
-  }
-
-  /* Participants list */
-  #participants-sidebar {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px;
-    flex: 1;
-    overflow-y: auto;
-    min-height: 80px;
-  }
-  .p-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    animation: slideIn .3s ease;
-  }
-  @keyframes slideIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
-  .p-item:last-child { border-bottom: none; }
-  .p-avatar {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-  .p-coins { margin-left: auto; color: var(--yellow); font-weight: 700; font-size: 12px; }
-
-  /* ── MAIN BOARD ── */
-  #main {
-    flex: 1;
-    background: #12141e;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* grid background */
-  #main::before {
-    content:'';
-    position:absolute; inset:0;
-    background-image: linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
-
-  #board {
-    width: 440px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Badges */
-  .badge {
-    border-radius: 10px;
-    padding: 14px 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 15px;
-    font-weight: 900;
-    letter-spacing: 2px;
-  }
-  .badge-nomin {
-    background: #0d1117;
-    border: 2px solid var(--yellow);
-    color: var(--yellow);
-    justify-content: center;
-    gap: 12px;
-  }
-  .badge-snipe {
-    background: #0d1117;
-    border: 2px solid rgba(255,255,255,.1);
-    color: var(--text);
-  }
-  .badge-snipe .snipe-val {
-    background: var(--tiktok);
-    color: #fff;
-    border-radius: 6px;
-    padding: 4px 14px;
-    font-size: 16px;
-  }
-  .badge-vouch {
-    background: rgba(124,77,255,.1);
-    border: 2px solid var(--purple);
-    color: var(--purple);
-  }
-  .badge-vouch .vouch-val {
-    background: var(--purple);
-    color: #fff;
-    border-radius: 6px;
-    padding: 4px 14px;
-    font-size: 16px;
-  }
-  .diamond { color: var(--accent); }
-
-  /* Main Clock Card */
-  #clock-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-  .clock-header {
-    background: rgba(0,0,0,.4);
-    padding: 14px 22px;
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-  }
-  .clock-brand {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--muted);
-  }
-  .clock-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 13px;
-    letter-spacing: 6px;
-    color: var(--text);
-    margin-top: 2px;
-  }
-  #main-timer {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 80px;
-    font-weight: 900;
-    text-align: center;
-    padding: 30px 0 20px;
-    color: #fff;
-    text-shadow: 0 0 40px rgba(0,229,255,.4);
-    transition: color .3s;
-    line-height: 1;
-  }
-  #main-timer.warning { color: var(--yellow); text-shadow: 0 0 40px rgba(255,214,0,.4); }
-  #main-timer.danger  { color: var(--red); text-shadow: 0 0 40px rgba(255,23,68,.6); animation: blink .5s infinite; }
-
-  /* Waiting / Winner area */
-  #waiting-area {
-    min-height: 160px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  #waiting-text {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 13px;
-    letter-spacing: 4px;
-    color: var(--muted);
-    text-align: center;
-  }
-  #winner-display {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    animation: winnerIn .5s ease;
-  }
-  @keyframes winnerIn { from{opacity:0;transform:scale(.8)} to{opacity:1;transform:scale(1)} }
-  .winner-label {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 10px;
-    letter-spacing: 4px;
-    color: var(--yellow);
-  }
-  .winner-name {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 28px;
-    font-weight: 900;
-    color: #fff;
-  }
-  .winner-coins {
-    font-size: 16px;
-    color: var(--yellow);
-    font-weight: 700;
-  }
-  .confetti-ring {
-    font-size: 36px;
-    animation: spin 2s linear infinite;
-  }
-  @keyframes spin { to{transform:rotate(360deg)} }
-
-  /* Bid list inside clock card */
-  #bid-list {
-    max-height: 140px;
-    overflow-y: auto;
-    padding: 0 18px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .bid-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,255,255,.03);
-    border-radius: 6px;
-    padding: 7px 10px;
-    font-size: 13px;
-    animation: bidIn .3s ease;
-  }
-  @keyframes bidIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-  .bid-avatar {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    display:flex;align-items:center;justify-content:center;
-    font-size:11px; font-weight:700; flex-shrink:0;
-  }
-  .bid-username { flex:1; font-weight:600; }
-  .bid-amount { color: var(--yellow); font-weight:700; font-size:12px; }
-  .bid-new { background: rgba(0,229,255,.06); border: 1px solid rgba(0,229,255,.2); }
-
-  /* Footer */
-  .clock-footer {
-    padding: 10px 22px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--muted);
-  }
-  #total-participants { font-weight: 700; }
-
-  /* Snipe warning banner */
-  #snipe-banner {
-    display: none;
-    background: linear-gradient(90deg, rgba(254,44,85,.2), rgba(254,44,85,.05));
-    border: 1px solid var(--tiktok);
-    border-radius: 8px;
-    padding: 10px 18px;
-    text-align: center;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--tiktok);
-    animation: pulse-border 1s infinite;
-  }
-  @keyframes pulse-border { 50%{border-color:transparent} }
-
-  /* Particles */
-  .particle {
-    position: fixed;
-    pointer-events: none;
-    font-size: 20px;
-    animation: float-up 1s ease forwards;
-    z-index: 999;
-  }
-  @keyframes float-up {
-    0%{opacity:1;transform:translateY(0) scale(1)}
-    100%{opacity:0;transform:translateY(-80px) scale(1.5)}
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.particle{position:fixed;pointer-events:none;animation:fu 1.1s ease forwards;z-index:999}
+@keyframes fu{0%{opacity:1;transform:translateY(0)scale(1)}100%{opacity:0;transform:translateY(-90px)scale(1.6)}}
 </style>
 </head>
 <body>
-
-<!-- ══════════════ SIDEBAR ══════════════ -->
-<aside id="sidebar">
-
-  <div>
-    <div class="section-label">Live Status</div>
-    <div class="status-box">
-      <div class="status-row">
-        <span>STATUS</span>
-        <span>REMAINING</span>
+<div class="board">
+  <div class="badge badge-nomin" id="badge-nomin">NO MINIMUM ✔</div>
+  <div class="badge badge-snipe">
+    <span>♦ SNIPE DELAY</span>
+    <span class="val" id="snipe-val">25S</span>
+  </div>
+  <div class="badge badge-vouch">
+    <span style="letter-spacing:3px">VOUCH</span>
+    <span class="val" id="vouch-val">0</span>
+  </div>
+  <div class="clock-card">
+    <div class="clock-top">
+      <div class="brand">⬡ HypeCode Studio</div>
+      <div class="brand-title">L U C K Y B I D</div>
+    </div>
+    <div id="main-timer">0:00</div>
+    <div id="snipe-flash">⚡ SNIPE! TIME EXTENDED</div>
+    <div id="waiting-area">
+      <div id="waiting-text">WAITING FOR PLAYERS...</div>
+      <div id="winner-display">
+        <div class="win-crown">🏆</div>
+        <div class="win-label">WINNER</div>
+        <div class="win-name" id="win-name">—</div>
+        <div class="win-coins" id="win-coins"></div>
       </div>
-      <div class="status-row" style="margin-bottom:0">
-        <span id="status-text">IDLE</span>
-        <span id="sidebar-timer">0:00</span>
-      </div>
-      <div class="btn-row" style="margin-top:14px">
-        <button class="btn btn-start" id="btn-start" onclick="startAuction()">▶ START</button>
-        <button class="btn btn-pause" id="btn-pause" onclick="pauseAuction()">⏸ PAUSE</button>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-restart" onclick="restartAuction()">↺ RESTART</button>
-      </div>
+    </div>
+    <div id="bid-feed"></div>
+    <div class="clock-footer">
+      <span>👥 <span id="total-count">0</span> participants</span>
+      <span id="footer-live">LIVE</span>
     </div>
   </div>
-
-  <div>
-    <div class="section-label">Timer</div>
-    <div class="timer-inputs">
-      <div class="timer-field">
-        <label>MIN</label>
-        <input type="number" id="inp-min" value="1" min="0" max="59" onchange="applyTimer()">
-      </div>
-      <div class="timer-field">
-        <label>SEC</label>
-        <input type="number" id="inp-sec" value="30" min="0" max="59" onchange="applyTimer()">
-      </div>
-    </div>
-    <div class="adj-row">
-      <button class="btn-sm btn-dec" onclick="adjustTimer(-30)">−30s</button>
-      <button class="btn-sm btn-inc" onclick="adjustTimer(+30)">+30s</button>
-    </div>
-    <div class="adj-row">
-      <button class="btn-sm btn-dec" onclick="adjustTimer(-10)">−10s</button>
-      <button class="btn-sm btn-inc" onclick="adjustTimer(+10)">+10s</button>
-    </div>
-  </div>
-
-  <div>
-    <div class="section-label">Game Settings</div>
-    <div class="setting-row">
-      <div class="setting-info">
-        <div class="name">MINIMUM BID</div>
-        <div class="sub">Coins to enter</div>
-      </div>
-      <span class="eye-btn">👁</span>
-      <div class="setting-val" id="min-bid-val">1</div>
-    </div>
-    <div class="adj-row">
-      <button class="btn-sm btn-dec" onclick="adjustMinBid(-1)">−1</button>
-      <button class="btn-sm btn-inc" onclick="adjustMinBid(+1)">+1</button>
-      <button class="btn-sm btn-inc" onclick="adjustMinBid(+5)">+5</button>
-    </div>
-
-    <div class="setting-row" style="margin-top:10px">
-      <div class="setting-info">
-        <div class="name">SNIPE DELAY</div>
-        <div class="sub">Extended time (s)</div>
-      </div>
-      <span class="eye-btn">👁</span>
-      <div class="setting-val" id="snipe-delay-val">25</div>
-    </div>
-    <div class="adj-row">
-      <button class="btn-sm btn-dec" onclick="adjustSnipe(-5)">−5</button>
-      <button class="btn-sm btn-inc" onclick="adjustSnipe(+5)">+5</button>
-    </div>
-  </div>
-
-  <div style="flex:1;min-height:80px">
-    <div class="section-label">Participants (<span id="p-count">0</span>)</div>
-    <div id="participants-sidebar">
-      <div style="color:var(--muted);font-size:12px;text-align:center;margin-top:20px">No bids yet</div>
-    </div>
-  </div>
-
-</aside>
-
-<!-- ══════════════ MAIN BOARD ══════════════ -->
-<main id="main">
-  <div id="board">
-
-    <div class="badge badge-nomin" id="badge-nomin">
-      NO MINIMUM ✔
-    </div>
-
-    <div class="badge badge-snipe">
-      <span><span class="diamond">♦</span> SNIPE DELAY</span>
-      <span class="snipe-val" id="board-snipe">25S</span>
-    </div>
-
-    <div class="badge badge-vouch">
-      <span style="letter-spacing:3px;font-size:13px">VOUCH</span>
-      <span class="vouch-val" id="board-vouch">13</span>
-    </div>
-
-    <div id="clock-card">
-      <div class="clock-header">
-        <div class="clock-brand">⬡ HypeCode Studio</div>
-        <div class="clock-title">L U C K Y B I D</div>
-      </div>
-
-      <div id="main-timer">0:00</div>
-
-      <div id="waiting-area">
-        <div id="waiting-text">WAITING FOR PLAYERS...</div>
-        <div id="winner-display">
-          <div class="confetti-ring">🏆</div>
-          <div class="winner-label">WINNER</div>
-          <div class="winner-name" id="winner-name">—</div>
-          <div class="winner-coins" id="winner-coins"></div>
-        </div>
-      </div>
-
-      <div id="snipe-banner">⚡ SNIPE! TIME EXTENDED</div>
-
-      <div id="bid-list"></div>
-
-      <div class="clock-footer">
-        <span>👥 Total participants: <span id="total-participants">0</span></span>
-        <span id="footer-status" style="color:var(--accent);font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px">READY</span>
-      </div>
-    </div>
-
-    <!-- Manual bid entry (for demo / host) -->
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <input id="inp-user" placeholder="Username" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none">
-      <input id="inp-coins" type="number" placeholder="Coins" min="1" style="width:90px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;text-align:center">
-      <button onclick="manualBid()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px">BID</button>
-    </div>
-
-  </div>
-</main>
+</div>
 
 <script>
-// ── State ──
-let totalSeconds = 90;
-let remaining = 90;
-let running = false;
-let interval = null;
-let minBid = 1;
-let snipeDelay = 25;
-let participants = [];
-let vouches = 13;
+let lastState=null, lastCount=0, lastRemaining=null;
+const fmt=s=>{const m=Math.floor(s/60),sc=s%60;return m+':'+(sc<10?'0':'')+sc;};
+const ini=n=>n?n.replace('@','')[0].toUpperCase():'?';
 
-const colors = ['#fe2c55','#00e5ff','#7c4dff','#ffd600','#00e676','#ff6d00','#e91e63','#1de9b6'];
-function randomColor() { return colors[Math.floor(Math.random()*colors.length)]; }
-function initial(name) { return name ? name[0].toUpperCase() : '?'; }
-function formatTime(s) {
-  const m = Math.floor(s/60), sec = s%60;
-  return m+':'+(sec<10?'0':'')+sec;
-}
+function apply(s){
+  if(!s)return;
 
-// ── Timer Logic ──
-function applyTimer() {
-  const m = parseInt(document.getElementById('inp-min').value)||0;
-  const s = parseInt(document.getElementById('inp-sec').value)||0;
-  totalSeconds = m*60+s;
-  remaining = totalSeconds;
-  renderTime();
-}
+  const el=document.getElementById('main-timer');
+  el.textContent=fmt(s.remaining||0);
+  el.className='';
+  if((s.remaining||0)<=10)el.classList.add('danger');
+  else if((s.remaining||0)<=30)el.classList.add('warning');
 
-function adjustTimer(delta) {
-  remaining = Math.max(0, remaining+delta);
-  totalSeconds = Math.max(0, totalSeconds+delta);
-  const total = remaining;
-  document.getElementById('inp-min').value = Math.floor(total/60);
-  document.getElementById('inp-sec').value = total%60;
-  renderTime();
-}
+  document.getElementById('snipe-val').textContent=(s.snipeDelay||25)+'S';
 
-function renderTime() {
-  const t = formatTime(remaining);
-  document.getElementById('main-timer').textContent = t;
-  document.getElementById('sidebar-timer').textContent = t;
+  // Badge: min bid
+  const minBadge=document.getElementById('badge-nomin');
+  minBadge.textContent=(s.minBid===0||s.minBid==null)?'NO MINIMUM ✔':'MIN BID: '+s.minBid+' 🪙';
 
-  const mt = document.getElementById('main-timer');
-  const st = document.getElementById('sidebar-timer');
-  mt.className = st.className = '';
-  if (remaining <= 10) { mt.classList.add('danger'); st.classList.add('danger'); }
-  else if (remaining <= 30) { mt.classList.add('warning'); st.classList.add('warning'); }
-}
+  const pCount=s.participants?s.participants.length:0;
+  document.getElementById('vouch-val').textContent=pCount;
+  document.getElementById('total-count').textContent=pCount;
 
-function tick() {
-  if (remaining <= 0) {
-    clearInterval(interval);
-    running = false;
-    endAuction();
-    return;
+  // Snipe detection: time went UP while running
+  if(lastRemaining!==null&&(s.remaining||0)>lastRemaining&&s.running){
+    showSnipe();spawn('⚡');
   }
-  remaining--;
-  renderTime();
-}
+  lastRemaining=s.remaining||0;
 
-function startAuction() {
-  if (running) return;
-  if (remaining <= 0) { remaining = totalSeconds; }
-  running = true;
-  interval = setInterval(tick, 1000);
-  document.getElementById('status-text').textContent = 'RUNNING';
-  document.getElementById('status-text').style.color = 'var(--green)';
-  document.getElementById('footer-status').textContent = 'LIVE';
-  document.getElementById('winner-display').style.display = 'none';
-  document.getElementById('waiting-text').style.display = 'block';
-}
-
-function pauseAuction() {
-  if (!running) return;
-  clearInterval(interval);
-  running = false;
-  document.getElementById('status-text').textContent = 'PAUSED';
-  document.getElementById('status-text').style.color = 'var(--yellow)';
-  document.getElementById('footer-status').textContent = 'PAUSED';
-}
-
-function restartAuction() {
-  clearInterval(interval);
-  running = false;
-  remaining = totalSeconds;
-  participants = [];
-  renderTime();
-  renderParticipants();
-  renderBids();
-  document.getElementById('status-text').textContent = 'IDLE';
-  document.getElementById('status-text').style.color = 'var(--muted)';
-  document.getElementById('footer-status').textContent = 'READY';
-  document.getElementById('winner-display').style.display = 'none';
-  document.getElementById('waiting-text').style.display = 'block';
-  document.getElementById('snipe-banner').style.display = 'none';
-}
-
-function endAuction() {
-  document.getElementById('status-text').textContent = 'ENDED';
-  document.getElementById('status-text').style.color = 'var(--red)';
-  document.getElementById('footer-status').textContent = 'ENDED';
-  document.getElementById('waiting-text').style.display = 'none';
-
-  if (participants.length > 0) {
-    const winner = participants[participants.length-1];
-    document.getElementById('winner-name').textContent = winner.name;
-    document.getElementById('winner-coins').textContent = '🪙 '+winner.coins+' coins';
-    document.getElementById('winner-display').style.display = 'flex';
-    spawnConfetti();
+  // Particle on new bid
+  const nc=pCount;
+  if(nc>lastCount&&s.participants&&s.participants.length>0){
+    const newest=s.participants[s.participants.length-1];
+    const c=newest.coins||0;
+    spawn(c>=100?'💎':c>=50?'🌟':'🪙');
   }
-}
+  lastCount=nc;
 
-// ── Bid / Participants ──
-function manualBid() {
-  if (!running) { alert('Start the auction first!'); return; }
-  const name  = document.getElementById('inp-user').value.trim();
-  const coins = parseInt(document.getElementById('inp-coins').value)||0;
-  if (!name) { alert('Enter a username'); return; }
-  if (coins < minBid) { alert('Bid is below minimum ('+minBid+' coins)'); return; }
-  addBid(name, coins);
-  document.getElementById('inp-user').value = '';
-  document.getElementById('inp-coins').value = '';
-}
+  renderFeed(s.participants||[]);
 
-function addBid(name, coins) {
-  // Snipe check
-  if (remaining <= snipeDelay && running) {
-    remaining += snipeDelay;
-    if (remaining > totalSeconds) remaining = totalSeconds;
-    showSnipeBanner();
-  }
-
-  const color = randomColor();
-  participants.push({ name, coins, color });
-
-  renderParticipants();
-  renderBids();
-  spawnParticle(coins);
-  vouches = Math.max(0, vouches + Math.floor(Math.random()*3));
-  document.getElementById('board-vouch').textContent = vouches;
-}
-
-function renderParticipants() {
-  const count = participants.length;
-  document.getElementById('p-count').textContent = count;
-  document.getElementById('total-participants').textContent = count;
-  const sb = document.getElementById('participants-sidebar');
-  if (count === 0) {
-    sb.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;margin-top:20px">No bids yet</div>';
-    return;
-  }
-  sb.innerHTML = [...participants].reverse().map(p=>`
-    <div class="p-item">
-      <div class="p-avatar" style="background:${p.color}22;color:${p.color}">${initial(p.name)}</div>
-      <span style="font-weight:600">${p.name}</span>
-      <span class="p-coins">🪙 ${p.coins}</span>
-    </div>`).join('');
-  document.getElementById('waiting-text').style.display = 'none';
-}
-
-function renderBids() {
-  const list = document.getElementById('bid-list');
-  const recent = [...participants].reverse().slice(0,6);
-  list.innerHTML = recent.map((p,i)=>`
-    <div class="bid-item ${i===0?'bid-new':''}">
-      <div class="bid-avatar" style="background:${p.color}22;color:${p.color}">${initial(p.name)}</div>
-      <span class="bid-username">${p.name}</span>
-      <span class="bid-amount">🪙 ${p.coins}</span>
-    </div>`).join('');
-}
-
-// ── Settings ──
-function adjustMinBid(d) {
-  minBid = Math.max(0, minBid+d);
-  document.getElementById('min-bid-val').textContent = minBid;
-  if (minBid === 0) {
-    document.getElementById('badge-nomin').textContent = 'NO MINIMUM ✔';
+  // Winner / waiting area
+  const wt=document.getElementById('waiting-text');
+  const wd=document.getElementById('winner-display');
+  if(s.winner){
+    wt.style.display='none';
+    wd.style.display='flex';
+    document.getElementById('win-name').textContent=s.winner.name||'—';
+    document.getElementById('win-coins').textContent='🪙 '+(s.winner.coins||0)+' coins';
+  } else if(pCount>0){
+    wt.style.display='none';
+    wd.style.display='none';
   } else {
-    document.getElementById('badge-nomin').textContent = 'MIN BID: '+minBid+' 🪙';
+    wt.style.display='block';
+    wd.style.display='none';
   }
+
+  // Confetti on new winner
+  if(s.winner&&(!lastState||!lastState.winner)){
+    const e=['🎉','🏆','⭐','🎊','💰','🪙','✨'];
+    for(let i=0;i<14;i++)setTimeout(()=>spawn(e[Math.floor(Math.random()*e.length)]),i*90);
+  }
+  lastState=s;
 }
 
-function adjustSnipe(d) {
-  snipeDelay = Math.max(0, snipeDelay+d);
-  document.getElementById('snipe-delay-val').textContent = snipeDelay;
-  document.getElementById('board-snipe').textContent = snipeDelay+'S';
+function renderFeed(participants){
+  const feed=document.getElementById('bid-feed');
+  if(!participants||!participants.length){feed.innerHTML='';return;}
+  const recent=[...participants].reverse().slice(0,5);
+  feed.innerHTML=recent.map((p,i)=>`
+    <div class="bid-item ${i===0?'newest':''}">
+      <div class="b-av" style="background:${p.color||'#7c4dff'}22;color:${p.color||'#7c4dff'}">${ini(p.name)}</div>
+      <span style="font-weight:600;flex:1">${p.name||'?'}</span>
+      <span class="b-src src-${p.source==='tiktok'?'tiktok':'manual'}">${p.source||'manual'}</span>
+      <span class="b-coins">🪙${p.coins||0}</span>
+    </div>`).join('');
 }
 
-// ── Snipe Banner ──
-function showSnipeBanner() {
-  const b = document.getElementById('snipe-banner');
-  b.style.display = 'block';
-  setTimeout(()=>{ b.style.display='none'; }, 3000);
+function showSnipe(){
+  const el=document.getElementById('snipe-flash');
+  el.style.display='block';
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.style.display='none',3500);
 }
 
-// ── Confetti / Particles ──
-function spawnParticle(coins) {
-  const el = document.createElement('div');
-  el.className = 'particle';
-  el.textContent = coins >= 100 ? '💎' : coins >= 50 ? '🌟' : '🪙';
-  el.style.left = (Math.random()*80+10)+'vw';
-  el.style.top  = (Math.random()*60+20)+'vh';
+function spawn(emoji){
+  const el=document.createElement('div');
+  el.className='particle';
+  el.textContent=emoji;
+  el.style.left=(Math.random()*80+10)+'vw';
+  el.style.top=(Math.random()*60+20)+'vh';
+  el.style.fontSize=(18+Math.random()*18)+'px';
   document.body.appendChild(el);
-  setTimeout(()=>el.remove(), 1100);
+  setTimeout(()=>el.remove(),1200);
 }
 
-function spawnConfetti() {
-  const emojis = ['🎉','🏆','⭐','🎊','💰','🪙','✨'];
-  for (let i=0;i<12;i++) {
-    setTimeout(()=>{
-      const el = document.createElement('div');
-      el.className = 'particle';
-      el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-      el.style.left = (Math.random()*90+5)+'vw';
-      el.style.top  = (Math.random()*70+10)+'vh';
-      el.style.fontSize = (20+Math.random()*20)+'px';
-      document.body.appendChild(el);
-      setTimeout(()=>el.remove(), 1100);
-    }, i*120);
-  }
+function poll(){
+  try{
+    const raw=localStorage.getItem('luckybid_state');
+    if(raw){
+      const parsed=JSON.parse(raw);
+      apply(parsed);
+    }
+  }catch(e){}
 }
 
-// ── Demo bots ──
-const botNames = ['@xtina_tt','@bidking99','@snipemaster','@luckybro','@coinqueen','@fastfingers','@megabidder','@toplayer'];
-function demoBid() {
-  if (!running) return;
-  const name  = botNames[Math.floor(Math.random()*botNames.length)];
-  const coins = Math.floor(Math.random()*200)+minBid;
-  addBid(name, coins);
-}
-
-// Auto demo every 8–15s when running
-setInterval(()=>{ if(running && Math.random()>.35) demoBid(); }, 9000);
-
-// Init
-renderTime();
+// Poll every 250ms for smooth updates
+setInterval(poll,250);
+poll();
 </script>
 </body>
 </html>
